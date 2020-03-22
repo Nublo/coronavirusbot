@@ -23,7 +23,7 @@ app.post('/new-message', function(req, res) {
   }
 
   var url = 'https://www.worldometers.info/coronavirus/'
-  axios.get({
+  axios({
      method: 'get',
      url,
      timeout: 5000
