@@ -21,9 +21,10 @@ app.post('/new-message', function(req, res) {
     return res.end()
   }
 
+  var url = 'https://www.worldometers.info/coronavirus/'
   axios.get({
      method: 'get',
-     url: 'https://www.worldometers.info/coronavirus/',
+     url,
      timeout: 5000
   }).then(response => {
     if (response.status === 200) {
