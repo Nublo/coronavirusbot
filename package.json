@@ -4,7 +4,6 @@
   "description": "Bot to get current status about coronavirus",
   "main": "index.js",
   "scripts": {
-    "test": "random",
     "start": "node index.js"
   },
   "author": "Anatol Varyvonchyk",
