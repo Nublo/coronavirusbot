@@ -18,8 +18,8 @@ app.post('/new-message', function(req, res) {
 
   //Each message contains "text" and a "chat" object, which has an "id" which is the chat id
 
-  if (!message) {
-    return res.end()
+  if (!message ) {
+    return res.sendStatus(200)
   }
 
   var url = 'https://www.worldometers.info/coronavirus/'
@@ -34,10 +34,12 @@ app.post('/new-message', function(req, res) {
         var count = $("body div.container div.row div.col-md-8 div.content-inner div#maincounter-wrap[style='margin-top:15px'] span[style='color:#aaa']").text()
         console.log(count)
         postTGMessage(message, "Total amount of infected - " + count)
+        res.sendStatus(200)
     }
   }).catch(err => {
     console.log("Request to worldometers failed - " + err)
     postTGMessage(message, "Failed to get info. You can [check manually](https://www.worldometers.info/coronavirus/)")
+    res.sendStatus(200)
   })
 
 })
