@@ -21,19 +21,21 @@ app.post('/new-message', function(req, res) {
     return res.end()
   }
 
-  axios.get(
-    'https://www.worldometers.info/coronavirus/'
-  ).then(response => {
+  axios.get({
+     method: 'get',
+     url: 'https://www.worldometers.info/coronavirus/',
+     timeout: 5000
+  }).then(response => {
     if (response.status === 200) {
         const html = response.data
         console.log(html)
         const $ = cheerio.load(html)
-        var count = $('/html/body/div[3]/div[2]/div[1]/div/div[4]/div/span').text().trim()
+        var count = $('/html/body/div[3]/div[2]/div[1]/div/div[4]/div/span').text()
         console.log(count)
-        postTGMessage(message, "Total amount of infected - " +count)
+        postTGMessage(message, "Total amount of infected - " + count)
     }
   }).catch(err => {
-    console.log("Request to worldometers failed")
+    console.log("Request to worldometers failed - " + err)
     postTGMessage(message, "Failed to get info. You can [check manually](https://www.worldometers.info/coronavirus/)")
   })
 
@@ -50,13 +52,11 @@ function postTGMessage(message, textToSend) {
     )
     .then(response => {
       // We get here if the message was successfully posted
-      console.log('Message posted')
-      res.end('ok')
+      console.log('TG Message posted')
     })
     .catch(err => {
       // ...and here if it was not
-      console.log('Error :', err)
-      res.end('Error :' + err)
+      console.log('TG Error :', err)
     })
 }
 
