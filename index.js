@@ -1,6 +1,7 @@
 var express = require('express')
 var app = express()
 var bodyParser = require('body-parser')
+const cheerio = require('cheerio')
 const axios = require('axios')
 
 app.use(bodyParser.json()) // for parsing application/json
@@ -20,15 +21,31 @@ app.post('/new-message', function(req, res) {
     return res.end()
   }
 
-  // If we've gotten this far, it means that we have received a message containing the word "marco".
-  // Respond by hitting the telegram bot API and responding to the approprite chat_id with the word "Polo!!"
-  // Remember to use your own API toked instead of the one below  "https://api.telegram.org/bot<your_api_token>/sendMessage"
+  axios.get(
+    'https://www.worldometers.info/coronavirus/'
+  ).then(response => {
+    if (response.status === 200) {
+        const html = response.data
+        console.log(html)
+        const $ = cheerio.load(html)
+        var count = $('/html/body/div[3]/div[2]/div[1]/div/div[4]/div/span').text().trim()
+        console.log(count)
+        postTGMessage(message, "Total amount of infected - " +count)
+    }
+  }).catch(err => {
+    console.log("Request to worldometers failed")
+    postTGMessage(message, "Failed to get info. You can [check manually](https://www.worldometers.info/coronavirus/)")
+  })
+
+})
+
+function postTGMessage(message, textToSend) {
   axios
     .post(
       'https://api.telegram.org/bot1114913919:AAHcUunychWYJbL9JSknBxyAbt7NXxlnGKk/sendMessage',
       {
         chat_id: message.chat.id,
-        text: "Echo " + message.text
+        text: message
       }
     )
     .then(response => {
@@ -41,7 +58,7 @@ app.post('/new-message', function(req, res) {
       console.log('Error :', err)
       res.end('Error :' + err)
     })
-})
+}
 
 // Finally, start our server
 app.listen(process.env.PORT, function() {
