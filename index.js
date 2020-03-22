@@ -48,7 +48,7 @@ function postTGMessage(message, textToSend) {
       'https://api.telegram.org/bot1114913919:AAHcUunychWYJbL9JSknBxyAbt7NXxlnGKk/sendMessage',
       {
         chat_id: message.chat.id,
-        text: message
+        text: textToSend
       }
     )
     .then(response => {
