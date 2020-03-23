@@ -15,7 +15,17 @@ var TelegramBot = require('node-telegram-bot-api'),
     bot = new TelegramBot(process.env.BOT_ID, { webHook: { port : port, host : host } });
 bot.setWebHook(externalUrl + ':' + port + '/bot' + token);
 
-bot.on('message', (message) => { 
+bot.onText(/\/help/, (msg) => {
+  bot.sendMessage(
+    msg.chat.id, 
+    "This bot can provide you current number of people infected by COVID-19. To get this information just type '/status'. Source of data is https://www.worldometers.info/coronavirus/. Bot also cache information and update it once in 10 min, so don't expect update in less that 10 min",
+    "reply_markup": {
+      "keyboard": [["/status"]]
+    }
+  )
+});
+
+bot.onText(/\/status/, (message) => {
   var totalCases = cache.get(KEY_CACHE)
   if (totalCases == undefined) {
     requestCountInfo(message)
@@ -23,7 +33,7 @@ bot.on('message', (message) => {
     console.log("Cache hit")
     sendMessage(message, totalCases)
   }
-});
+})
 
 function requestCountInfo(message, res) {
   var url = 'https://www.worldometers.info/coronavirus/'
