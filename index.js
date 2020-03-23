@@ -44,6 +44,6 @@ function requestCountInfo(message, res) {
 }
 
 function sendMessage(message, cases) {
-  bot.sendMessage(msg.chat.id, "Total amount of infected - " + cases);
+  bot.sendMessage(message.chat.id, "Total amount of infected - " + cases);
   console.log('Total cases - ' + cases)
 }
