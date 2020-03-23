@@ -21,7 +21,7 @@ bot.onText(/\/help/, (msg) => {
     "This bot can provide you current number of people infected by COVID-19. To get this information just type '/status'. Source of data is https://www.worldometers.info/coronavirus/. Bot also cache information and update it once in 10 min, so don't expect update in less that 10 min",
     { 
       "reply_markup": {
-        "keyboard": [["/status"]]
+        "keyboard": [["/status"], ["/help"]]
       }
     }
   )
@@ -56,6 +56,12 @@ function requestCountInfo(message, res) {
 }
 
 function sendMessage(message, cases) {
-  bot.sendMessage(message.chat.id, "Total amount of infected - " + cases);
+  bot.sendMessage(
+    message.chat.id, 
+    "Total amount of infected - " + cases,
+    reply_markup: JSON.stringify({
+        remove_keyboard: true
+    })
+  );
   console.log('Total cases - ' + cases)
 }
