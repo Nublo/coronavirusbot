@@ -7,8 +7,13 @@ const axios = require('axios')
 const NodeCache = require('node-cache');
 const cache = new NodeCache();
 
-const TelegramBot = require('node-telegram-bot-api'); 
-const bot = new TelegramBot(process.env.BOT_ID, {polling: true});
+var TelegramBot = require('node-telegram-bot-api'),
+    port = process.env.PORT || 443,
+    host = process.env.HOST || '0.0.0.0',
+    externalUrl = 'https://secure-hamlet-34963.herokuapp.com/',
+    token = process.env.BOT_ID,
+    bot = new TelegramBot(process.env.BOT_ID, { webHook: { port : port, host : host } });
+bot.setWebHook(externalUrl + ':' + port + '/bot' + token);
 
 bot.on('message', (msg) => { 
   var totalCases = cache.get(KEY_CACHE)
