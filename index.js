@@ -35,7 +35,7 @@ bot.onText(/\/status/, (message) => {
   }
 })
 
-bot.onText(/\/top (\d+)/, (msg, match) => {
+bot.onText(/\/top (\d+)/, (message, match) => {
   requestHtml(message, function(html) {
     const top = match[1];
     const $ = cheerio.load(html)
