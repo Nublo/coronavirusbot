@@ -59,6 +59,7 @@ function requestHtml(message, callback) {
         callback(response.data)
     }
   }).catch(err => {
+    console.log("error - " + err)
     bot.sendMessage(message.chat.id, FAILED_API_MESSAGE)
   })
 }
