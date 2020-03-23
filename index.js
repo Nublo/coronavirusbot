@@ -59,9 +59,11 @@ function sendMessage(message, cases) {
   bot.sendMessage(
     message.chat.id, 
     "Total amount of infected - " + cases,
-    reply_markup: JSON.stringify({
-        remove_keyboard: true
-    })
+    {
+      "reply_markup": {
+        "remove_keyboard": true
+      }
+    }
   );
   console.log('Total cases - ' + cases)
 }
