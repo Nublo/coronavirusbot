@@ -15,7 +15,7 @@ var TelegramBot = require('node-telegram-bot-api'),
     bot = new TelegramBot(process.env.BOT_ID, { webHook: { port : port, host : host } });
 bot.setWebHook(externalUrl + ':' + port + '/bot' + token);
 
-bot.on('message', (msg) => { 
+bot.on('message', (message) => { 
   var totalCases = cache.get(KEY_CACHE)
   if (totalCases == undefined) {
     requestCountInfo(message)
