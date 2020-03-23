@@ -1,5 +1,5 @@
 const KEY_CACHE = "amount_of_cases"
-const CACHE_TTL = 10000
+const CACHE_TTL = 600
 const FAILED_API_MESSAGE = "Failed to get info. You can [check manually](https://www.worldometers.info/coronavirus/)"
 
 const cheerio = require('cheerio')
