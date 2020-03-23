@@ -1,6 +1,5 @@
 const KEY_CACHE = "amount_of_cases"
 const CACHE_TTL = 10000
-const BOT_ID = "1114913919:AAHcUunychWYJbL9JSknBxyAbt7NXxlnGKk"
 const FAILED_API_MESSAGE = "Failed to get info. You can [check manually](https://www.worldometers.info/coronavirus/)"
 
 var express = require('express')
@@ -58,7 +57,7 @@ function requestCountInfo(message, res) {
 function sendMessage(message, cases) {
   axios
     .post(
-      'https://api.telegram.org/bot' + BOT_ID +'/sendMessage',
+      'https://api.telegram.org/bot' + process.env.BOT_ID +'/sendMessage',
       {
         chat_id: message.chat.id,
         text: "Total amount of infected - " + cases
