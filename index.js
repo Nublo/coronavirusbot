@@ -1,6 +1,8 @@
 const KEY_CACHE = "amount_of_cases"
 const CACHE_TTL = 600
 const FAILED_API_MESSAGE = "Failed to get info. You can [check manually](https://www.worldometers.info/coronavirus/)"
+const HELP_MESSAGE = "This bot can provide you current number of people infected by COVID-19. To get this information just type '/status'. Source of data is https://www.worldometers.info/coronavirus/. Bot also cache information and update it once in 10 min, so don't expect update in less that 10 min"
+const URL = 'https://www.worldometers.info/coronavirus/'
 
 const cheerio = require('cheerio')
 const axios = require('axios')
@@ -16,10 +18,7 @@ var TelegramBot = require('node-telegram-bot-api'),
 bot.setWebHook(externalUrl + ':' + port + '/bot' + token);
 
 bot.onText(/\/help/, (msg) => {
-  bot.sendMessage(
-    msg.chat.id, 
-    "This bot can provide you current number of people infected by COVID-19. To get this information just type '/status'. Source of data is https://www.worldometers.info/coronavirus/. Bot also cache information and update it once in 10 min, so don't expect update in less that 10 min"
-  )
+  bot.sendMessage(msg.chat.id, HELP_MESSAGE)
 });
 
 bot.onText(/\/status/, (message) => {
@@ -29,30 +28,42 @@ bot.onText(/\/status/, (message) => {
         const $ = cheerio.load(html)
         var count = $("body div.container div.row div.col-md-8 div.content-inner div#maincounter-wrap[style='margin-top:15px'] span[style='color:#aaa']").text()
         cache.set(KEY_CACHE, count, CACHE_TTL)
-        sendMessage(message, count)
+        sendTotalCasesMessage(message, count)
     })
   } else {
     console.log("Cache hit")
-    sendMessage(message, totalCases)
+    sendTotalCasesMessage(message, totalCases)
   }
 })
 
+bot.onText(/\/top (d+)/, (msg, match) => {
+  requestHtml(message, function(html) {
+    const top = match[1];
+    const $ = cheerio.load(html)
+    let countryCases = [];
+    $("#main_table_countries_today tbody [role='row'] td.sorting_1").each(function (i, e) {
+        countryCases[i] = $(this).text();
+    });
+    let topCases = countryCases.slice(0, Math.min(top, countryCases.length))
+    bot.sendMessage(message.chat.id, topCases)
+  })
+})
+
 function requestHtml(message, callback) {
-  var url = 'https://www.worldometers.info/coronavirus/'
   axios({
      method: 'get',
-     url,
+     URL,
      timeout: 5000
   }).then(response => {
     if (response.status === 200) {
         callback(response.data)
     }
   }).catch(err => {
-    sendMessage(message, FAILED_API_MESSAGE)
+    bot.sendMessage(message.chat.id, FAILED_API_MESSAGE)
   })
 }
 
-function sendMessage(message, cases) {
+function sendTotalCasesMessage(message, cases) {
   bot.sendMessage(
     message.chat.id,
     "Total amount of infected - " + cases
