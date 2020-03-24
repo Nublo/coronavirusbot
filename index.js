@@ -4,7 +4,7 @@ const CACHE_TTL = 600
 const FAILED_API_MESSAGE = "Failed to get info. You can [check manually](https://www.worldometers.info/coronavirus/)"
 const HELP_MESSAGE = "This bot can provide you current number of people infected by COVID-19. " +
                       "To get this information just type /status. " +
-                      "To get top 10 infected countries type /top and positive number." +
+                      "To get top 10 infected countries type /top and positive number. " +
                       "Bot caches information and updates it once in 10 min. " +
                       "Source is https://www.worldometers.info/coronavirus/."
 
@@ -30,7 +30,7 @@ bot.onText(/\/status/, (message) => {
   if (totalCases == undefined) {
     requestHtml(message, function (html) { 
         const $ = cheerio.load(html)
-        var count = $("body div.container div.row div.col-md-8 div.content-inner div#maincounter-wrap[style='margin-top:15px'] span[style='color:#aaa']").text()
+        var count = $(".maincounter-number [style='color:#aaa']").text()
         cache.set(KEY_CACHE, count, CACHE_TTL)
         sendTotalCasesMessage(message, count)
     })
