@@ -1,4 +1,5 @@
 const KEY_CACHE = "amount_of_cases"
+const COUNTRIES_CACHE = "COUNTRIES_CACHE"
 const CACHE_TTL = 600
 const FAILED_API_MESSAGE = "Failed to get info. You can [check manually](https://www.worldometers.info/coronavirus/)"
 const HELP_MESSAGE = "This bot can provide you current number of people infected by COVID-19. " +
@@ -47,8 +48,14 @@ bot.onText(/\/top (\d+)/, (message, match) => {
   requestTopCountries(message, match[1])
 })
 
-// TODO add cache
 function requestTopCountries(message, top) {
+  var cacheCountries = cache.get(COUNTRIES_CACHE)
+  if (cacheCountries != undefined) {
+    console.log("Cache hit")
+    sendCountriesResponse(message, cacheCountries, top)
+    return;
+  }
+
   requestHtml(message, function(html) {
     const $ = cheerio.load(html)
     let countries = [];
@@ -59,16 +66,28 @@ function requestTopCountries(message, top) {
     $("#main_table_countries_today td:nth-child(2)").each(function (i, e) {
         cases[i] = $(this).text();
     });
-    let topCountries = countries.slice(0, Math.min(top, countries.length))
-    var text = ''
-    for (i = 0; i < topCountries.length; i++) {
-      text += topCountries[i] + ' - ' + cases[i]
-      if (i != topCountries.length - 1) {
-        text += '\n'
-      } 
+    let countriesAndCases = [];
+    for (i = 0; i < countries.length; i++) {
+      countriesAndCases.push({
+        country: countries[i],
+        cases: cases[i]
+      })
     }
-    bot.sendMessage(message.chat.id, text)
+    cache.set(COUNTRIES_CACHE, countriesAndCases, CACHE_TTL)
+    sendCountriesResponse(message, countriesAndCases, top)
   })
+}
+
+function sendCountriesResponse(message, countriesAndCases, top) {
+  let topCountries = countriesAndCases.slice(0, Math.min(top, countries.length))
+  var text = ''
+  for (i = 0; i < topCountries.length; i++) {
+    text += topCountries[i].country + ' - ' + topCountries[i].cases
+    if (i != topCountries.length - 1) {
+      text += '\n'
+    } 
+  }
+  bot.sendMessage(message.chat.id, text)
 }
 
 function requestHtml(message, callback) {
