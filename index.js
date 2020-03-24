@@ -6,7 +6,7 @@ const HELP_MESSAGE = "This bot can provide you current number of people infected
                       "To get this information just type /status. " +
                       "To get top 10 infected countries type /top and positive number. " +
                       "Bot caches information and updates it once in 10 min. " +
-                      "Source is https://www.worldometers.info/coronavirus/."
+                      "[Source](https://www.worldometers.info/coronavirus/)"
 
 const cheerio = require('cheerio')
 const axios = require('axios')
@@ -22,7 +22,13 @@ var TelegramBot = require('node-telegram-bot-api'),
 bot.setWebHook(externalUrl + ':' + port + '/bot' + token);
 
 bot.onText(/\/help/, (msg) => {
-  bot.sendMessage(msg.chat.id, HELP_MESSAGE)
+  bot.sendMessage(
+    msg.chat.id, 
+    HELP_MESSAGE,
+    {
+      "parse_mode": "Markdown"
+    }
+  )
 });
 
 bot.onText(/\/status/, (message) => {
@@ -35,7 +41,7 @@ bot.onText(/\/status/, (message) => {
         sendTotalCasesMessage(message, count)
     })
   } else {
-    console.log("Cache hit")
+    console.log("/status Cache hit")
     sendTotalCasesMessage(message, totalCases)
   }
 })
@@ -51,7 +57,7 @@ bot.onText(/\/top (\d+)/, (message, match) => {
 function requestTopCountries(message, top) {
   var cacheCountries = cache.get(COUNTRIES_CACHE)
   if (cacheCountries != undefined) {
-    console.log("Cache hit")
+    console.log("/top Cache hit")
     sendCountriesResponse(message, cacheCountries, top)
     return;
   }
@@ -102,7 +108,13 @@ function requestHtml(message, callback) {
     }
   }).catch(err => {
     console.log("error - " + err)
-    bot.sendMessage(message.chat.id, FAILED_API_MESSAGE)
+    bot.sendMessage(
+      message.chat.id,
+      FAILED_API_MESSAGE,
+      {
+        "parse_mode": "Markdown"
+      }
+    )
   })
 }
 
