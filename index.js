@@ -3,10 +3,10 @@ const COUNTRIES_CACHE = "COUNTRIES_CACHE"
 const CACHE_TTL = 600
 const FAILED_API_MESSAGE = "Failed to get info. You can [check manually](https://www.worldometers.info/coronavirus/)"
 const HELP_MESSAGE = "This bot can provide you current number of people infected by COVID-19. " +
-                      "To get this information just type '/status'. " +
-                      "To get top 10 infected countries type '/top 10'. You can replace 10 with another value. " +
-                      "Source of data is https://www.worldometers.info/coronavirus/. "
-                      "Bot also caches information and update it once in 10 min."
+                      "To get this information just type /status. " +
+                      "To get top 10 infected countries type /top and positive number." +
+                      "Bot caches information and updates it once in 10 min. " +
+                      "Source is https://www.worldometers.info/coronavirus/."
 
 const cheerio = require('cheerio')
 const axios = require('axios')
