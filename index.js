@@ -39,10 +39,17 @@ bot.onText(/\/status/, (message) => {
   }
 })
 
-// TODO add cache
+bot.onText(/\/top$/, (message) => {
+  requestTopCountries(message, 10)
+})
+
 bot.onText(/\/top (\d+)/, (message, match) => {
+  requestTopCountries(message, match[1])
+})
+
+// TODO add cache
+function requestTopCountries(message, top) {
   requestHtml(message, function(html) {
-    const top = match[1];
     const $ = cheerio.load(html)
     let countries = [];
     $("#main_table_countries_today td:nth-child(1)").each(function (i, e) {
@@ -62,7 +69,7 @@ bot.onText(/\/top (\d+)/, (message, match) => {
     }
     bot.sendMessage(message.chat.id, text)
   })
-})
+}
 
 function requestHtml(message, callback) {
   var url = 'https://www.worldometers.info/coronavirus/'
