@@ -40,11 +40,16 @@ bot.onText(/\/top (\d+)/, (message, match) => {
     const top = match[1];
     const $ = cheerio.load(html)
     let countryCases = [];
-    $("#main_table_countries_today tbody [role='row'] td.sorting_1").each(function (i, e) {
-        countryCases[i] = $(this).text();
+    $("#main_table_countries_today td:nth-child(1)").each(function (i, e) {
+        countryCases[i].country = $(this).text();
+    });
+    $("#main_table_countries_today td:nth-child(2)").each(function (i, e) {
+        countryCases[i].count = $(this).text();
     });
     let topCases = countryCases.slice(0, Math.min(top, countryCases.length))
-    bot.sendMessage(message.chat.id, topCases)
+    console.log(topCases)
+    let readableFormat = topCases.map(x => x.country + ' - ' + x.count)
+    bot.sendMessage(message.chat.id, readableFormat.join('\n'))
   })
 })
 
