@@ -1,7 +1,11 @@
 const KEY_CACHE = "amount_of_cases"
 const CACHE_TTL = 600
 const FAILED_API_MESSAGE = "Failed to get info. You can [check manually](https://www.worldometers.info/coronavirus/)"
-const HELP_MESSAGE = "This bot can provide you current number of people infected by COVID-19. To get this information just type '/status'. Source of data is https://www.worldometers.info/coronavirus/. Bot also cache information and update it once in 10 min, so don't expect update in less that 10 min"
+const HELP_MESSAGE = "This bot can provide you current number of people infected by COVID-19. \
+                      To get this information just type '/status'. \
+                      To get top 10 infected countries type '/top 10'. You can replace 10 with another value.
+                      Source of data is https://www.worldometers.info/coronavirus/. \
+                      Bot also caches information and update it once in 10 min. "
 
 const cheerio = require('cheerio')
 const axios = require('axios')
@@ -35,6 +39,7 @@ bot.onText(/\/status/, (message) => {
   }
 })
 
+// TODO add cache
 bot.onText(/\/top (\d+)/, (message, match) => {
   requestHtml(message, function(html) {
     const top = match[1];
