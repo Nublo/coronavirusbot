@@ -39,17 +39,23 @@ bot.onText(/\/top (\d+)/, (message, match) => {
   requestHtml(message, function(html) {
     const top = match[1];
     const $ = cheerio.load(html)
-    let countryCases = [];
+    let countries = [];
     $("#main_table_countries_today td:nth-child(1)").each(function (i, e) {
-        countryCases[i].country = $(this).text();
+        countries[i] = $(this).text();
     });
+    let cases = [];
     $("#main_table_countries_today td:nth-child(2)").each(function (i, e) {
-        countryCases[i].count = $(this).text();
+        cases[i] = $(this).text();
     });
-    let topCases = countryCases.slice(0, Math.min(top, countryCases.length))
-    console.log(topCases)
-    let readableFormat = topCases.map(x => x.country + ' - ' + x.count)
-    bot.sendMessage(message.chat.id, readableFormat.join('\n'))
+    let topCountries = countries.slice(0, Math.min(top, countries.length))
+    var text = ''
+    for (i = 0; i < topCountries.length; i++) {
+      text += topCountries[i] + ' - ' + cases[i]
+      if (i != topCountries.length - 1) {
+        text += '\n'
+      } 
+    }
+    bot.sendMessage(message.chat.id, text)
   })
 })
 
