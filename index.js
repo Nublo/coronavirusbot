@@ -19,7 +19,7 @@ var queue = []
 var TelegramBot = require('node-telegram-bot-api'),
     port = process.env.PORT || 443,
     host = process.env.HOST || '0.0.0.0',
-    externalUrl = 'https://secure-hamlet-34963.herokuapp.com/',
+    externalUrl = 'https://coronavirusstatusbot.herokuapp.com/',
     token = process.env.BOT_ID,
     bot = new TelegramBot(process.env.BOT_ID, { webHook: { port : port, host : host } });
 bot.setWebHook(externalUrl + ':' + port + '/bot' + token);
