@@ -158,7 +158,7 @@ cron.schedule('*/10 * * * *', () => {
       var currentCases = cache.get(STATUS_CACHE)
       if (!sendUpdate) {
         sendUpdate = true
-        sendTotalCasesMessage({chat:{id:"189202274"}} currentCases)
+        sendTotalCasesMessage({chat:{id:"189202274"}}, currentCases)
       }
     })
 });
