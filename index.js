@@ -14,6 +14,8 @@ const cron = require('node-cron')
 const NodeCache = require('node-cache');
 const cache = new NodeCache();
 
+var queue = []
+
 var TelegramBot = require('node-telegram-bot-api'),
     port = process.env.PORT || 443,
     host = process.env.HOST || '0.0.0.0',
@@ -44,12 +46,7 @@ bot.onText(/\/status/, (message) => {
 })
 
 function sendTotalCasesMessage(message, cases) {
-  bot.sendMessage(
-    message.chat.id,
-    "Total amount of infected - " + cases
-  );
-  console.log('Total cases - ' + cases)
-  console.log('Chat id - ' + message.chat.id)
+  bot.sendMessage(message.chat.id, "Total amount of infected - " + cases);
 }
 
 bot.onText(/\/top$/, (message) => {
@@ -148,17 +145,33 @@ function sendDefaultErrorMessageCallback(message) {
   }
 }
 
-var sendUpdate = false
+bot.onText(/\/subscribe (\d+)/, (message, match) => {
+  var target = match[1]
+  var current = cache.get(STATUS_CACHE)
+  if (current != undefined && current > target) {
+    sendTotalCasesMessage(message, current)
+    return;
+  }
+
+  queue.push({"message": message, "target": target})
+  bot.sendMessage(
+    message.chat.id,
+    "Bot will notify you, when amount of cases will increase " + target,
+  )
+})
+
 cron.schedule('*/10 * * * *', () => {
   requestHtml(
     function(html) {
-      updateCache(html)
       console.log("Success cron update")
-
+      updateCache(html)
       var currentCases = cache.get(STATUS_CACHE)
-      if (!sendUpdate) {
-        sendUpdate = true
-        sendTotalCasesMessage({chat:{id:"189202274"}}, currentCases)
+      var i = queue.length
+      while (i--) {
+        if (queue[i].target < currentCases) {
+          sendTotalCasesMessage(queue[i].message, currentCases)
+          queue.splice(i, 1);
+        }
       }
     })
 });
