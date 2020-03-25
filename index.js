@@ -148,11 +148,17 @@ function sendDefaultErrorMessageCallback(message) {
   }
 }
 
+var sendUpdate = false
 cron.schedule('*/10 * * * *', () => {
-  console.log("Cron update")
   requestHtml(
     function(html) {
       updateCache(html)
       console.log("Success cron update")
+
+      var currentCases = cache.get(STATUS_CACHE)
+      if (!sendUpdate) {
+        sendUpdate = true
+        sendTotalCasesMessage({chat:{id:"189202274"}} currentCases)
+      }
     })
 });
