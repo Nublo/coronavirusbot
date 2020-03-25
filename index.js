@@ -1,4 +1,4 @@
-const KEY_CACHE = "amount_of_cases"
+const STATUS_CACHE = "amount_of_cases"
 const COUNTRIES_CACHE = "COUNTRIES_CACHE"
 const CACHE_TTL = 600
 const FAILED_API_MESSAGE = "Failed to get info. You can [check manually](https://www.worldometers.info/coronavirus/)"
@@ -10,6 +10,7 @@ const HELP_MESSAGE = "This bot can provide you current number of people infected
 
 const cheerio = require('cheerio')
 const axios = require('axios')
+const cron = require('node-cron')
 const NodeCache = require('node-cache');
 const cache = new NodeCache();
 
@@ -22,29 +23,34 @@ var TelegramBot = require('node-telegram-bot-api'),
 bot.setWebHook(externalUrl + ':' + port + '/bot' + token);
 
 bot.onText(/\/help/, (msg) => {
-  bot.sendMessage(
-    msg.chat.id, 
-    HELP_MESSAGE,
-    {
-      "parse_mode": "Markdown"
-    }
-  )
+  bot.sendMessage(msg.chat.id, HELP_MESSAGE, { "parse_mode": "Markdown" })
 });
 
 bot.onText(/\/status/, (message) => {
-  var totalCases = cache.get(KEY_CACHE)
-  if (totalCases == undefined) {
-    requestHtml(message, function (html) { 
-        const $ = cheerio.load(html)
-        var count = $(".maincounter-number [style='color:#aaa']").text()
-        cache.set(KEY_CACHE, count, CACHE_TTL)
-        sendTotalCasesMessage(message, count)
-    })
-  } else {
+  var totalCases = cache.get(STATUS_CACHE)
+  if (totalCases != undefined) {
     console.log("/status Cache hit")
     sendTotalCasesMessage(message, totalCases)
+    return
   }
+
+  requestHtml(
+    function (html) {
+      updateCache(html)
+      sendTotalCasesMessage(message, cache.get(STATUS_CACHE))
+    },
+    sendDefaultErrorMessageCallback(message)
+  )
 })
+
+function sendTotalCasesMessage(message, cases) {
+  bot.sendMessage(
+    message.chat.id,
+    "Total amount of infected - " + cases
+  );
+  console.log('Total cases - ' + cases)
+  console.log('Chat id - ' + message.chat.id)
+}
 
 bot.onText(/\/top$/, (message) => {
   requestTopCountries(message, 10)
@@ -62,26 +68,44 @@ function requestTopCountries(message, top) {
     return;
   }
 
-  requestHtml(message, function(html) {
-    const $ = cheerio.load(html)
-    let countries = [];
-    $("#main_table_countries_today td:nth-child(1)").each(function (i, e) {
-        countries[i] = $(this).text();
-    });
-    let cases = [];
-    $("#main_table_countries_today td:nth-child(2)").each(function (i, e) {
-        cases[i] = $(this).text();
-    });
-    let countriesAndCases = [];
-    for (i = 0; i < countries.length; i++) {
-      countriesAndCases.push({
-        country: countries[i],
-        cases: cases[i]
-      })
-    }
-    cache.set(COUNTRIES_CACHE, countriesAndCases, CACHE_TTL)
-    sendCountriesResponse(message, countriesAndCases, top)
-  })
+  requestHtml(
+    function(html) {
+      updateCache(html)
+      sendCountriesResponse(message, cache.get(COUNTRIES_CACHE), top)
+    },
+    sendDefaultErrorMessageCallback(message)
+  )
+}
+
+function updateCache(html) {
+  updateCasesCache(html)
+  updateCountriesCache(html)
+}
+
+function updateCasesCache(html) {
+  const $ = cheerio.load(html)
+  var count = $(".maincounter-number [style='color:#aaa']").text()
+  cache.set(STATUS_CACHE, count, CACHE_TTL)
+}
+
+function updateCountriesCache(html) {
+  const $ = cheerio.load(html)
+  let countries = [];
+  $("#main_table_countries_today td:nth-child(1)").each(function (i, e) {
+      countries[i] = $(this).text();
+  });
+  let cases = [];
+  $("#main_table_countries_today td:nth-child(2)").each(function (i, e) {
+      cases[i] = $(this).text();
+  });
+  let countriesAndCases = [];
+  for (i = 0; i < countries.length; i++) {
+    countriesAndCases.push({
+      country: countries[i],
+      cases: cases[i]
+    })
+  }
+  cache.set(COUNTRIES_CACHE, countriesAndCases, CACHE_TTL)
 }
 
 function sendCountriesResponse(message, countriesAndCases, top) {
@@ -96,7 +120,7 @@ function sendCountriesResponse(message, countriesAndCases, top) {
   bot.sendMessage(message.chat.id, text)
 }
 
-function requestHtml(message, callback) {
+function requestHtml(callback, errorCallback = function(error){}) {
   var url = 'https://www.worldometers.info/coronavirus/'
   axios({
      method: 'get',
@@ -107,6 +131,12 @@ function requestHtml(message, callback) {
         callback(response.data)
     }
   }).catch(err => {
+    errorCallback(err)
+  })
+}
+
+function sendDefaultErrorMessageCallback(message) {
+  return function(err) {
     console.log("error - " + err)
     bot.sendMessage(
       message.chat.id,
@@ -115,13 +145,14 @@ function requestHtml(message, callback) {
         "parse_mode": "Markdown"
       }
     )
-  })
+  }
 }
 
-function sendTotalCasesMessage(message, cases) {
-  bot.sendMessage(
-    message.chat.id,
-    "Total amount of infected - " + cases
-  );
-  console.log('Total cases - ' + cases)
-}
+cron.schedule('*/10 * * * *', () => {
+  console.log("Cron update")
+  requestHtml(
+    function(html) {
+      updateCache(html)
+      console.log("Success cron update")
+    })
+});
