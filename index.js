@@ -30,7 +30,7 @@ bot.onText(/\/help/, (msg) => {
 
 bot.onText(/\/status/, (message) => {
   var totalCases = cache.get(STATUS_CACHE)
-  if (totalCases != undefined) {
+  if (totalCases) {
     console.log("/status Cache hit")
     sendTotalCasesMessage(message, totalCases)
     return
@@ -59,7 +59,7 @@ bot.onText(/\/top (\d+)/, (message, match) => {
 
 function requestTopCountries(message, top) {
   var cacheCountries = cache.get(COUNTRIES_CACHE)
-  if (cacheCountries != undefined) {
+  if (cacheCountries) {
     console.log("/top Cache hit")
     sendCountriesResponse(message, cacheCountries, top)
     return;
@@ -148,7 +148,7 @@ function sendDefaultErrorMessageCallback(message) {
 bot.onText(/\/subscribe (\d+)/, (message, match) => {
   var target = match[1]
   var current = cache.get(STATUS_CACHE)
-  if (current != undefined && current > target) {
+  if (current && current > target) {
     sendTotalCasesMessage(message, current)
     return;
   }
