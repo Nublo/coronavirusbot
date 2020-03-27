@@ -106,7 +106,7 @@ function updateCountriesCache(html) {
 }
 
 function sendCountriesResponse(message, countriesAndCases, top) {
-  let topCountries = sorted.slice(0, Math.min(top, sorted.length))
+  let topCountries = countriesAndCases.slice(0, Math.min(top, countriesAndCases.length))
   var text = ''
   for (i = 0; i < topCountries.length; i++) {
     text += topCountries[i].country + ' - ' + topCountries[i].cases
