@@ -109,6 +109,7 @@ function sendCountriesResponse(message, countriesAndCases, top) {
   let sorted = countriesAndCases.sort((a, b) => 
     parseInt(a.cases.replace(/\D/g,'')) >=  parseInt(b.cases.replace(/\D/g,'')) ? -1 : 1
   )
+  sorted.shift() // Removing "Total:" line from response
   let topCountries = sorted.slice(0, Math.min(top, sorted.length))
   var text = ''
   for (i = 0; i < topCountries.length; i++) {
