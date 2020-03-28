@@ -204,4 +204,9 @@ cron.schedule('*/10 * * * *', () => {
         }
       }
     })
-});
+})
+
+requestHtml(function (html) { 
+  console.log("Initial update")
+  updateCache(html) 
+})
