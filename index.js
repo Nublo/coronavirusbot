@@ -56,7 +56,7 @@ bot.onText(/\/status$/, (msg) => {
   )
 })
 
-bot.onText(/\/status (.+)/ (msg, match) => {
+bot.onText(/\/status (.+)/, (msg, match) => {
   var cacheCountries = cache.get(COUNTRIES_CACHE)
   if (cacheCountries) {
     var filtered = cacheCountries.filter(e => e.country.includes(match[1]))
