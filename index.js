@@ -1,11 +1,17 @@
 const STATUS_CACHE = "amount_of_cases"
 const COUNTRIES_CACHE = "COUNTRIES_CACHE"
 const CACHE_TTL = 600
-const FAILED_API_MESSAGE = "Failed to get info. You can [check manually](https://www.worldometers.info/coronavirus/)"
-const HELP_MESSAGE = "This bot can provide you current number of people infected by COVID-19. " +
-                      "To get this information just type /status. " +
-                      "To get top 10 infected countries type /top and positive number. " +
-                      "Bot caches information and updates it once in 10 min. " +
+
+const FAILED_REQUEST_MESSAGE = "Failed to get info. You can [check manually](https://www.worldometers.info/coronavirus/)"
+const START_MESSAGE = "Type /help to see what you can do with this bot"
+const STATUS_MESSAGE = "Total amount of infected - "
+const SUBSCRIBE_HELP_MESSAGE = "You need to write positive number as an argument.\n" +
+                               "For example: /subscribe 1000000"
+const SUBSCRIBE_NOTIFY_MESSAGE = "Bot will notify you when amount of cases will be more than "
+const HELP_MESSAGE = "This bot can provide you current number of people infected by COVID-19.\n" +
+                      "To get amount of infected type /status. To get cases by country type /status USA.\n" +
+                      "To get top 10 infected countries type /top. You can also type '/top 20' to get more countries.\n" +
+                      "Information updates once in 10 min.\n" +
                       "[Source](https://www.worldometers.info/coronavirus/)"
 
 const cheerio = require('cheerio')
@@ -24,53 +30,87 @@ var TelegramBot = require('node-telegram-bot-api'),
     bot = new TelegramBot(process.env.BOT_ID, { webHook: { port : port, host : host } });
 bot.setWebHook(externalUrl + ':' + port + '/bot' + token);
 
-bot.onText(/\/help/, (msg) => {
-  bot.sendMessage(msg.chat.id, HELP_MESSAGE, { "parse_mode": "Markdown" })
+bot.onText(/\/start/, (msg) => {
+  bot.sendMessage(msg.chat.id, START_MESSAGE)
 });
 
-bot.onText(/\/status/, (message) => {
+bot.onText(/\/help/, (msg) => {
+  bot.sendMessage(msg.chat.id, HELP_MESSAGE, {"parse_mode": "Markdown"})
+});
+
+bot.onText(/\/status$/, (msg) => {
   var totalCases = cache.get(STATUS_CACHE)
+  var chatId = msg.chat.id
   if (totalCases) {
     console.log("/status Cache hit")
-    sendTotalCasesMessage(message, totalCases)
+    sendTotalCasesMessage(chatId, totalCases)
     return
   }
 
   requestHtml(
     function (html) {
       updateCache(html)
-      sendTotalCasesMessage(message, cache.get(STATUS_CACHE))
+      sendTotalCasesMessage(chatId, cache.get(STATUS_CACHE))
     },
-    sendDefaultErrorMessageCallback(message)
+    sendDefaultErrorMessageCallback(chatId)
   )
 })
 
-function sendTotalCasesMessage(message, cases) {
-  bot.sendMessage(message.chat.id, "Total amount of infected - " + cases);
+bot.onText(/\/status (\w+)/ (msg, match) => {
+  var cacheCountries = cache.get(COUNTRIES_CACHE)
+  if (cacheCountries) {
+    var filtered = cacheCountries.filter(e => e.country.includes(match[1]))
+    if (filtered.length == 0) {
+      bot.sendMessage(msg.chat.id, "Unknown country - " + match[1] + ". Try to use /top to check country name.")
+      return;
+    }
+
+    bot.sendMessage(msg.chat.id, getCountriesMessage(filtered))
+  }
+})
+
+bot.onText(/\/top$/, (msg) => {
+  requestTopCountries(msg.chat.id, 10)
+})
+
+bot.onText(/\/top (\d+)/, (msg, match) => {
+  requestTopCountries(msg.chat.id, match[1])
+})
+
+bot.onText(/\/subscribe$/, (msg) => {
+  bot.sendMessage(msg.chat.id, SUBSCRIBE_HELP_MESSAGE)
+})
+
+bot.onText(/\/subscribe (\d+)/, (msg, match) => {
+  var target = match[1]
+  var current = cache.get(STATUS_CACHE)
+  if (current && current > target) {
+    sendTotalCasesMessage(msg.chat.id, current)
+    return;
+  }
+
+  queue.push({"chatId": msg.chat.id, "target": target})
+  bot.sendMessage(msg.chat.id, SUBSCRIBE_NOTIFY_MESSAGE + `${target}`)
+})
+
+function sendTotalCasesMessage(chatId, cases) {
+  bot.sendMessage(chatId, STATUS_MESSAGE + cases);
 }
 
-bot.onText(/\/top$/, (message) => {
-  requestTopCountries(message, 10)
-})
-
-bot.onText(/\/top (\d+)/, (message, match) => {
-  requestTopCountries(message, match[1])
-})
-
-function requestTopCountries(message, top) {
+function requestTopCountries(chatId, top) {
   var cacheCountries = cache.get(COUNTRIES_CACHE)
   if (cacheCountries) {
     console.log("/top Cache hit")
-    sendCountriesResponse(message, cacheCountries, top)
+    sendCountriesResponse(chatId, cacheCountries, top)
     return;
   }
 
   requestHtml(
     function(html) {
       updateCache(html)
-      sendCountriesResponse(message, cache.get(COUNTRIES_CACHE), top)
+      sendCountriesResponse(chatId, cache.get(COUNTRIES_CACHE), top)
     },
-    sendDefaultErrorMessageCallback(message)
+    sendDefaultErrorMessageCallback(chatId)
   )
 }
 
@@ -105,20 +145,27 @@ function updateCountriesCache(html) {
   cache.set(COUNTRIES_CACHE, countriesAndCases, CACHE_TTL)
 }
 
-function sendCountriesResponse(message, countriesAndCases, top) {
+function sendCountriesResponse(chatId, countriesAndCases, top) {
+  if (top == 0) {
+    return;
+  }
   let sorted = countriesAndCases.sort((a, b) => 
     parseInt(a.cases.replace(/\D/g,'')) >=  parseInt(b.cases.replace(/\D/g,'')) ? -1 : 1
   )
   sorted.shift() // Removing "Total:" line from response
   let topCountries = sorted.slice(0, Math.min(top, sorted.length))
+  bot.sendMessage(chatId, getCountriesMessage(topCountries))
+}
+
+function getCountriesMessage(countriesAndCases) {
   var text = ''
-  for (i = 0; i < topCountries.length; i++) {
-    text += topCountries[i].country + ' - ' + topCountries[i].cases
-    if (i != topCountries.length - 1) {
+  for (i = 0; i < countriesAndCases.length; i++) {
+    text += countriesAndCases[i].country + ' - ' + countriesAndCases[i].cases
+    if (i != countriesAndCases.length - 1) {
       text += '\n'
-    } 
+    }
   }
-  bot.sendMessage(message.chat.id, text)
+  return text
 }
 
 function requestHtml(callback, errorCallback = function(error){}) {
@@ -136,33 +183,12 @@ function requestHtml(callback, errorCallback = function(error){}) {
   })
 }
 
-function sendDefaultErrorMessageCallback(message) {
+function sendDefaultErrorMessageCallback(chatId) {
   return function(err) {
     console.log("error - " + err)
-    bot.sendMessage(
-      message.chat.id,
-      FAILED_API_MESSAGE,
-      {
-        "parse_mode": "Markdown"
-      }
-    )
+    bot.sendMessage(chatId, FAILED_REQUEST_MESSAGE, {"parse_mode": "Markdown"})
   }
 }
-
-bot.onText(/\/subscribe (\d+)/, (message, match) => {
-  var target = match[1]
-  var current = cache.get(STATUS_CACHE)
-  if (current && current > target) {
-    sendTotalCasesMessage(message, current)
-    return;
-  }
-
-  queue.push({"message": message, "target": target})
-  bot.sendMessage(
-    message.chat.id,
-    "Bot will notify you, when amount of cases will increase " + target,
-  )
-})
 
 cron.schedule('*/10 * * * *', () => {
   requestHtml(
@@ -173,7 +199,7 @@ cron.schedule('*/10 * * * *', () => {
       var i = queue.length
       while (i--) {
         if (queue[i].target < currentCases) {
-          sendTotalCasesMessage(queue[i].message, currentCases)
+          sendTotalCasesMessage(queue[i].chatId, currentCases)
           queue.splice(i, 1);
         }
       }
