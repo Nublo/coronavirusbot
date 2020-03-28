@@ -13,6 +13,8 @@ const HELP_MESSAGE = "This bot can provide you current number of people infected
                       "To get top 10 infected countries type /top. You can also type '/top 20' to get more countries.\n" +
                       "Information updates once in 10 min.\n" +
                       "[Source](https://www.worldometers.info/coronavirus/)"
+const STOP_MESSAGE_SUCCESS = "Removed all your active subscriptions"
+const STOP_MESSAGE_NO_SUBSCRIPTIONS = "You don't have any active subscriptions"
 
 const cheerio = require('cheerio')
 const axios = require('axios')
@@ -98,6 +100,18 @@ bot.onText(/\/subscribe (\d+)/, (msg, match) => {
   bot.sendMessage(msg.chat.id, SUBSCRIBE_NOTIFY_MESSAGE + `${target}`)
 })
 
+bot.onText(/\/stop/, (msg) => {
+  var i = queue.length
+  var subscribed = false
+  while (i--) {
+    if (queue[i].chatId == msg.chat.id) {
+      queue.splice(i, 1);
+      subscribed = true
+    }
+  }
+  bot.sendMessage(msg.chat.id, subscribed ? STOP_MESSAGE_SUCCESS : STOP_MESSAGE_NO_SUBSCRIPTIONS)
+})
+
 function sendTotalCasesMessage(chatId, cases) {
   bot.sendMessage(chatId, STATUS_MESSAGE + cases);
 }
@@ -142,6 +156,9 @@ function updateCountriesCache(html) {
   });
   let countriesAndCases = [];
   for (i = 0; i < countries.length; i++) {
+    if (countries[i].toLowerCase().contains("total")) { // Filtering "total row"
+      continue;
+    }
     countriesAndCases.push({
       country: countries[i],
       cases: cases[i]
@@ -151,15 +168,11 @@ function updateCountriesCache(html) {
 }
 
 function sendCountriesResponse(chatId, countriesAndCases, top) {
-  if (top == 0) {
-    return;
-  }
+  if (top == 0) { return; }
   let sorted = countriesAndCases.sort((a, b) => 
     parseInt(a.cases.replace(/\D/g,'')) >=  parseInt(b.cases.replace(/\D/g,'')) ? -1 : 1
   )
-  sorted.shift() // Removing "Total:" line from response
-  let topCountries = sorted.slice(0, Math.min(top, sorted.length))
-  bot.sendMessage(chatId, getCountriesMessage(topCountries))
+  bot.sendMessage(chatId, getCountriesMessage(sorted.slice(0, Math.min(top, sorted.length))))
 }
 
 function getCountriesMessage(countriesAndCases) {
