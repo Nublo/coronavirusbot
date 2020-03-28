@@ -101,7 +101,7 @@ bot.onText(/\/subscribe (\d+)/, (msg, match) => {
   }
 
   const query = {
-    text: 'INSERT INTO subscriptions (chat_id, target) VALUES ($1, $2)',
+    text: 'INSERT INTO subscriptions (chat_id, target) VALUES ($1, $2) RETURNING *',
     values: [msg.chat.id, target],
   }
   pool
@@ -115,7 +115,7 @@ bot.onText(/\/subscribe (\d+)/, (msg, match) => {
 
 bot.onText(/\/stop/, (msg) => {
   const query = {
-    text: 'DELETE FROM subscriptions WHERE chat_id = $1',
+    text: 'DELETE FROM subscriptions WHERE chat_id = $1 RETURNING *',
     values: [msg.chat.id]
   }
   pool
@@ -233,7 +233,7 @@ cron.schedule('*/10 * * * *', () => {
       var currentCases = cache.get(STATUS_CACHE)
 
       const query = {
-        text: 'DELETE FROM subscriptions WHERE target <= $1',
+        text: 'DELETE FROM subscriptions WHERE target <= $1 RETURNING *',
         values: [currentCases]
       }
       pool
