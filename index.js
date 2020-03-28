@@ -9,7 +9,7 @@ const SUBSCRIBE_HELP_MESSAGE = "You need to write positive number as an argument
                                "For example: /subscribe 1000000"
 const SUBSCRIBE_NOTIFY_MESSAGE = "Bot will notify you when amount of cases will be more than "
 const HELP_MESSAGE = "This bot can provide you current number of people infected by COVID-19.\n" +
-                      "To get amount of infected type /status. To get cases by country type /status USA.\n" +
+                      "To get amount of infected type /status. To get cases by country type `/status USA`.\n" +
                       "To get top 10 infected countries type /top. You can also type '/top 20' to get more countries.\n" +
                       "Information updates once in 10 min.\n" +
                       "[Source](https://www.worldometers.info/coronavirus/)"
@@ -59,7 +59,7 @@ bot.onText(/\/status$/, (msg) => {
 bot.onText(/\/status (.+)/, (msg, match) => {
   var cacheCountries = cache.get(COUNTRIES_CACHE)
   if (cacheCountries) {
-    var filtered = cacheCountries.filter(e => e.country.includes(match[1]))
+    var filtered = cacheCountries.filter(e => e.country.toLowerCase().includes(match[1].toLowerCase()))
     if (filtered.length == 0) {
       bot.sendMessage(msg.chat.id, "Unknown country - " + match[1] + ". Try to use /top to check country name.")
       return;
