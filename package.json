@@ -13,6 +13,7 @@
     "cheerio": "^1.0.0-rc.3",
     "node-cache": "^5.1.0",
     "node-cron": "^2.0.3",
-    "node-telegram-bot-api": "^0.40.0"
+    "node-telegram-bot-api": "^0.40.0",
+    "pg": "^7.18.2"
   }
 }

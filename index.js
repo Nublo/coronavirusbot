@@ -10,7 +10,8 @@ const SUBSCRIBE_HELP_MESSAGE = "You need to write positive number as an argument
 const SUBSCRIBE_NOTIFY_MESSAGE = "Bot will notify you when amount of cases will be more than "
 const HELP_MESSAGE = "This bot can provide you current number of people infected by COVID-19.\n" +
                       "To get amount of infected type /status. To get cases by country type `/status USA`.\n" +
-                      "To get top 10 infected countries type /top. You can also type '/top 20' to get more countries.\n" +
+                      "To get top 10 infected countries type /top. You can also type `/top 20` to get more countries.\n" +
+                      "You can subscribe to total amount of cases using `/subscribe 500`.\n" +
                       "Information updates once in 10 min.\n" +
                       "[Source](https://www.worldometers.info/coronavirus/)"
 const STOP_MESSAGE_SUCCESS = "Removed all your active subscriptions"
@@ -21,8 +22,11 @@ const axios = require('axios')
 const cron = require('node-cron')
 const NodeCache = require('node-cache');
 const cache = new NodeCache();
+const { Pool } = require('pg')
 
-var queue = []
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
+})
 
 var TelegramBot = require('node-telegram-bot-api'),
     port = process.env.PORT || 443,
@@ -96,20 +100,31 @@ bot.onText(/\/subscribe (\d+)/, (msg, match) => {
     return;
   }
 
-  queue.push({"chatId": msg.chat.id, "target": target})
-  bot.sendMessage(msg.chat.id, SUBSCRIBE_NOTIFY_MESSAGE + `${target}`)
+  const query = {
+    text: 'INSERT INTO subscriptions (chat_id, target) VALUES ($1 $2)',
+    values: [msg.chat.id, target],
+  }
+  pool
+    .query(query)
+    .then(res => {
+      console.log(res.row[0])
+      bot.sendMessage(res.row[0].chat_id, SUBSCRIBE_NOTIFY_MESSAGE + `${res.row[0].target}`)
+    })
 })
 
 bot.onText(/\/stop/, (msg) => {
-  var i = queue.length
-  var subscribed = false
-  while (i--) {
-    if (queue[i].chatId == msg.chat.id) {
-      queue.splice(i, 1);
-      subscribed = true
-    }
+  const query = {
+    text: 'DELETE FROM subscriptions WHERE chat_id = $1',
+    values: [msg.chat.id]
   }
-  bot.sendMessage(msg.chat.id, subscribed ? STOP_MESSAGE_SUCCESS : STOP_MESSAGE_NO_SUBSCRIPTIONS)
+  pool
+    .query(query)
+    .then(res => 
+      bot.sendMessage(
+        msg.chat.id,
+        res.row.length > 0 ? STOP_MESSAGE_SUCCESS : STOP_MESSAGE_NO_SUBSCRIPTIONS
+      )
+    )
 })
 
 function sendTotalCasesMessage(chatId, cases) {
@@ -214,13 +229,18 @@ cron.schedule('*/10 * * * *', () => {
       console.log("Success cron update")
       updateCache(html)
       var currentCases = cache.get(STATUS_CACHE)
-      var i = queue.length
-      while (i--) {
-        if (queue[i].target < currentCases) {
-          sendTotalCasesMessage(queue[i].chatId, currentCases)
-          queue.splice(i, 1);
-        }
+
+      const query = {
+        text: 'DELETE FROM subscriptions WHERE target <= $1',
+        values: [currentCases]
       }
+      pool
+        .query(query)
+        .then(res => 
+          for (i = 0; i < res.row.length; i++) {
+            sendTotalCasesMessage(res.row[i].chat_id, currentCases)
+          }
+        )
     })
 })
 
