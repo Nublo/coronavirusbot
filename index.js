@@ -107,8 +107,8 @@ bot.onText(/\/subscribe (\d+)/, (msg, match) => {
   pool
     .query(query)
     .then(res => {
-      console.log(res.row[0])
-      bot.sendMessage(res.row[0].chat_id, SUBSCRIBE_NOTIFY_MESSAGE + `${res.row[0].target}`)
+      console.log(res.rows[0])
+      bot.sendMessage(res.rows[0].chat_id, SUBSCRIBE_NOTIFY_MESSAGE + `${res.rows[0].target}`)
     })
 })
 
@@ -122,7 +122,7 @@ bot.onText(/\/stop/, (msg) => {
     .then(res => 
       bot.sendMessage(
         msg.chat.id,
-        res.row.length > 0 ? STOP_MESSAGE_SUCCESS : STOP_MESSAGE_NO_SUBSCRIPTIONS
+        res.rows.length > 0 ? STOP_MESSAGE_SUCCESS : STOP_MESSAGE_NO_SUBSCRIPTIONS
       )
     )
 })
@@ -237,8 +237,8 @@ cron.schedule('*/10 * * * *', () => {
       pool
         .query(query)
         .then(res => {
-          for (i = 0; i < res.row.length; i++) {
-            sendTotalCasesMessage(res.row[i].chat_id, currentCases)
+          for (i = 0; i < res.rows.length; i++) {
+            sendTotalCasesMessage(res.rows[i].chat_id, currentCases)
           }
         })
     })
