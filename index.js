@@ -101,7 +101,7 @@ bot.onText(/\/subscribe (\d+)/, (msg, match) => {
   }
 
   const query = {
-    text: 'INSERT INTO subscriptions (chat_id, target) VALUES ($1 $2)',
+    text: 'INSERT INTO subscriptions (chat_id, target) VALUES ($1, $2)',
     values: [msg.chat.id, target],
   }
   pool
