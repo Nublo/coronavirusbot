@@ -234,7 +234,7 @@ cron.schedule('*/10 * * * *', () => {
 
       const query = {
         text: 'DELETE FROM subscriptions WHERE target <= $1 RETURNING *',
-        values: [currentCases]
+        values: [currentCases.replace(/\D/g,'')]
       }
       pool
         .query(query)
