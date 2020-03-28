@@ -18,9 +18,9 @@ const STOP_MESSAGE_SUCCESS = "Removed all your active subscriptions"
 const STOP_MESSAGE_NO_SUBSCRIPTIONS = "You don't have any active subscriptions"
 const DONATE_MESSAGE = "Your support is greatly appreciated.\n" +
                        "If you want to see more features feel free to support this project.\n" +
-                       "[Donate via yandex.money](https://money.yandex.ru/to/410014247261560)\n" +
                        "[Donate via paypall](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=3C7ZRH48YETS4&source=url)\n" +
-                       "[Donate via Ethereum](https://etherdonation.com/d?to=0x3f3c8988f40425cd208bbd0f5892d38e03e3772d)"
+                       "[Donate via Ethereum](https://etherdonation.com/d?to=0x3f3c8988f40425cd208bbd0f5892d38e03e3772d)\n" +
+                       "[Donate via yandex.money](https://money.yandex.ru/to/410014247261560)"
 
 const cheerio = require('cheerio')
 const axios = require('axios')
