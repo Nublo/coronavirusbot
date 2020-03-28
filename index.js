@@ -65,7 +65,12 @@ bot.onText(/\/status (.+)/, (msg, match) => {
       return;
     }
 
-    bot.sendMessage(msg.chat.id, getCountriesMessage(filtered))
+    var exactMatch = filtered.filter(e => e.country == match[1])
+    if (exactMatch.length == 1) {
+      bot.sendMessage(msg.chat.id, getCountriesMessage(exactMatch))
+    } else {
+      bot.sendMessage(msg.chat.id, getCountriesMessage(filtered))
+    }
   }
 })
 
