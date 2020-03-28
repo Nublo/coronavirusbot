@@ -110,6 +110,7 @@ bot.onText(/\/subscribe (\d+)/, (msg, match) => {
       console.log(res.rows[0])
       bot.sendMessage(res.rows[0].chat_id, SUBSCRIBE_NOTIFY_MESSAGE + `${res.rows[0].target}`)
     })
+    .catch(e => console.error(e.stack))
 })
 
 bot.onText(/\/stop/, (msg) => {
@@ -125,6 +126,7 @@ bot.onText(/\/stop/, (msg) => {
         res.rows.length > 0 ? STOP_MESSAGE_SUCCESS : STOP_MESSAGE_NO_SUBSCRIPTIONS
       )
     )
+    .catch(e => console.error(e.stack))
 })
 
 function sendTotalCasesMessage(chatId, cases) {
@@ -171,7 +173,7 @@ function updateCountriesCache(html) {
   });
   let countriesAndCases = [];
   for (i = 0; i < countries.length; i++) {
-    if (countries[i].toLowerCase().contains("total")) { // Filtering "total row"
+    if (countries[i].toLowerCase().includes("total")) { // Filtering "total row"
       continue;
     }
     countriesAndCases.push({
@@ -241,6 +243,7 @@ cron.schedule('*/10 * * * *', () => {
             sendTotalCasesMessage(res.rows[i].chat_id, currentCases)
           }
         })
+        .catch(e => console.error(e.stack))
     })
 })
 
