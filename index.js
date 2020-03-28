@@ -236,11 +236,11 @@ cron.schedule('*/10 * * * *', () => {
       }
       pool
         .query(query)
-        .then(res => 
+        .then(res => {
           for (i = 0; i < res.row.length; i++) {
             sendTotalCasesMessage(res.row[i].chat_id, currentCases)
           }
-        )
+        })
     })
 })
 
