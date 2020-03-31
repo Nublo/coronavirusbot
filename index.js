@@ -112,10 +112,8 @@ bot.onText(/\/subscribe$/, (msg) => {
 bot.onText(/\/subscribe (\d+)/, (msg, match) => {
   trackUser(msg.chat.id)
   var target = match[1]
-  console.log(match)
-  console.log(target)
   var current = cache.get(STATUS_CACHE)
-  if (current && current > target) {
+  if (current && current > parseInt(target.replace(/\D/g,''))) {
     sendTotalCasesMessage(msg.chat.id, current)
     return;
   }
