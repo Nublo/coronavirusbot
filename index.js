@@ -42,18 +42,22 @@ var TelegramBot = require('node-telegram-bot-api'),
 bot.setWebHook(externalUrl + ':' + port + '/bot' + token);
 
 bot.onText(/\/start/, (msg) => {
+  trackUser(msg.chat.id)
   bot.sendMessage(msg.chat.id, START_MESSAGE)
 });
 
 bot.onText(/\/help/, (msg) => {
+  trackUser(msg.chat.id)
   bot.sendMessage(msg.chat.id, HELP_MESSAGE, {"parse_mode": "Markdown"})
 });
 
 bot.onText(/\/donate/, (msg) => {
+  trackUser(msg.chat.id)
   bot.sendMessage(msg.chat.id, DONATE_MESSAGE, {"parse_mode": "Markdown"})
 })
 
 bot.onText(/\/status$/, (msg) => {
+  trackUser(msg.chat.id)
   var totalCases = cache.get(STATUS_CACHE)
   var chatId = msg.chat.id
   if (totalCases) {
@@ -72,6 +76,7 @@ bot.onText(/\/status$/, (msg) => {
 })
 
 bot.onText(/\/status (.+)/, (msg, match) => {
+  trackUser(msg.chat.id)
   var cacheCountries = cache.get(COUNTRIES_CACHE)
   if (cacheCountries) {
     var filtered = cacheCountries.filter(e => e.country.toLowerCase().includes(match[1].toLowerCase()))
@@ -90,18 +95,22 @@ bot.onText(/\/status (.+)/, (msg, match) => {
 })
 
 bot.onText(/\/top$/, (msg) => {
+  trackUser(msg.chat.id)
   requestTopCountries(msg.chat.id, 10)
 })
 
 bot.onText(/\/top (\d+)/, (msg, match) => {
+  trackUser(msg.chat.id)
   requestTopCountries(msg.chat.id, match[1])
 })
 
 bot.onText(/\/subscribe$/, (msg) => {
+  trackUser(msg.chat.id)
   bot.sendMessage(msg.chat.id, SUBSCRIBE_HELP_MESSAGE)
 })
 
 bot.onText(/\/subscribe (\d+)/, (msg, match) => {
+  trackUser(msg.chat.id)
   var target = match[1]
   var current = cache.get(STATUS_CACHE)
   if (current && current > target) {
@@ -123,6 +132,7 @@ bot.onText(/\/subscribe (\d+)/, (msg, match) => {
 })
 
 bot.onText(/\/stop/, (msg) => {
+  trackUser(msg.chat.id)
   const query = {
     text: 'DELETE FROM subscriptions WHERE chat_id = $1 RETURNING *',
     values: [msg.chat.id]
@@ -232,6 +242,15 @@ function sendDefaultErrorMessageCallback(chatId) {
     console.log("error - " + err)
     bot.sendMessage(chatId, FAILED_REQUEST_MESSAGE, {"parse_mode": "Markdown"})
   }
+}
+
+function trackUser(chatId) {
+  const query = {
+    text: 'INSERT INTO users (chat_id) VALUES ($1) ON CONFLICT DO NOTHING'
+    values: [chatId]
+  }
+  pool
+    .query(query)
 }
 
 cron.schedule('*/10 * * * *', () => {
