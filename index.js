@@ -246,7 +246,7 @@ function sendDefaultErrorMessageCallback(chatId) {
 
 function trackUser(chatId) {
   const query = {
-    text: 'INSERT INTO users (chat_id) VALUES ($1) ON CONFLICT DO NOTHING'
+    text: 'INSERT INTO users (chat_id) VALUES ($1) ON CONFLICT DO NOTHING',
     values: [chatId]
   }
   pool
