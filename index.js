@@ -148,6 +148,22 @@ bot.onText(/\/stop/, (msg) => {
     .catch(e => console.error(e.stack))
 })
 
+bot.onText(/\/stats/, (msg) => {
+  const query = {
+    text: 'SELECT COUNT(*) FROM users UNION ALL SELECT COUNT(DISTINCT chat_id) FROM subscriptions'
+  }
+  pool
+    .query(query)
+    .then(res => {
+      bot.sendMessage(
+        msg.chat.id,
+        "Unique users - " + res.rows[0] + "\n" +
+        "Unique subscriptions - " + res.rows[1]
+      )
+    })
+    .catch(e => cosole.error(e.stack))
+})
+
 function sendTotalCasesMessage(chatId, cases) {
   bot.sendMessage(chatId, STATUS_MESSAGE + cases);
 }
