@@ -157,8 +157,8 @@ bot.onText(/\/stats/, (msg) => {
     .then(res => {
       bot.sendMessage(
         msg.chat.id,
-        "Unique users - " + res.rows[0] + "\n" +
-        "Unique subscriptions - " + res.rows[1]
+        "Unique users - " + res.rows[0].count + "\n" +
+        "Unique subscriptions - " + res.rows[1].count
       )
     })
     .catch(e => cosole.error(e.stack))
