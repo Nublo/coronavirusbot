@@ -211,7 +211,7 @@ function updateCountriesCache(html) {
   for (i = 0; i < countries.length; i++) {
     var filtered = false;
     for (j = 0; j < notCountries.length; j++) {
-      if countries[i].toLowerCase().includes(notCountries[j]) {
+      if (countries[i].toLowerCase().includes(notCountries[j])) {
         filtered = true;
       }
     }
