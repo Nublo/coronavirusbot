@@ -207,7 +207,7 @@ function updateCountriesCache(html) {
       cases[i] = $(this).text();
   });
   let countriesAndCases = [];
-  let notCountries = ["total", "world"];
+  let notCountries = ["total", "world", "europe", "north america", "asia", "south america", "africa", "oceania"];
   for (i = 0; i < countries.length; i++) {
     var filtered = false;
     for (j = 0; j < notCountries.length; j++) {
