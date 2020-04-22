@@ -29,17 +29,17 @@ const NodeCache = require('node-cache');
 const cache = new NodeCache();
 const { Pool } = require('pg')
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-})
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 
-var TelegramBot = require('node-telegram-bot-api'),
-    port = process.env.PORT || 443,
-    host = process.env.HOST || '0.0.0.0',
-    externalUrl = 'https://coronavirusstatusbot.herokuapp.com/',
-    token = process.env.BOT_ID,
-    bot = new TelegramBot(process.env.BOT_ID, { webHook: { port : port, host : host } });
-bot.setWebHook(externalUrl + ':' + port + '/bot' + token);
+const TelegramBot = require('node-telegram-bot-api');
+const options = {
+  webHook : {
+    port : process.env.PORT
+  }
+}
+const url = process.env.SERVICE_URL + ':' + process.env.PORT;
+const bot = new TelegramBot(process.env.BOT_ID, options);
+bot.setWebHook(url + '/bot' + process.env.BOT_ID);
 
 bot.onText(/\/start/, (msg) => {
   trackUser(msg.chat.id)
