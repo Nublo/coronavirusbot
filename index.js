@@ -32,14 +32,20 @@ const { Pool } = require('pg')
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 
 const TelegramBot = require('node-telegram-bot-api');
+const isProduction = typeof process.env.PORT !== 'undefined'
 const options = {
   webHook : {
     port : process.env.PORT
   }
 }
 const url = process.env.SERVICE_URL + ':' + process.env.PORT;
-const bot = new TelegramBot(process.env.BOT_ID, options);
-bot.setWebHook(url + '/bot' + process.env.BOT_ID);
+let bot;
+if (isProduction) {
+  bot = new TelegramBot(process.env.BOT_ID, options);
+  bot.setWebHook(url + '/bot' + process.env.BOT_ID);
+} else {
+  bot = new TelegramBot(process.env.BOT_ID, {polling: true});
+}
 
 bot.onText(/\/start/, (msg) => {
   trackUser(msg.chat.id)
@@ -161,7 +167,7 @@ bot.onText(/\/stats/, (msg) => {
         "Unique subscriptions - " + res.rows[1].count
       )
     })
-    .catch(e => cosole.error(e.stack))
+    .catch(e => console.error(e.stack))
 })
 
 function sendTotalCasesMessage(chatId, cases) {

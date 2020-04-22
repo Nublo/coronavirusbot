@@ -4,7 +4,8 @@
   "description": "Bot to get current status about coronavirus",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "start_dev": "export $(cat .env | xargs) && node index.js"
   },
   "author": "Anatol Varyvonchyk",
   "license": "ISC",
